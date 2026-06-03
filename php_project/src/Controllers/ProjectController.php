@@ -87,10 +87,9 @@ final class ProjectController extends Controller
     public function show(string $projectId): void
     {
         AuthMiddleware::requireAuth();
-        $user = Session::get('auth_user');
-        $project = $this->projects->findById($projectId);
+        $project = $this->findOwnedProject($projectId);
 
-        if ($project === null || $project->clientId !== (string) $user['id']) {
+        if ($project === null) {
             http_response_code(404);
             echo self::PROJECT_NOT_FOUND;
             return;
@@ -105,6 +104,16 @@ final class ProjectController extends Controller
     public function acceptPlan(string $projectId): void
     {
         AuthMiddleware::requireAuth();
+        $project = $this->findOwnedProject($projectId);
+
+        if ($project === null) {
+            $this->json(['ok' => false, 'message' => self::PROJECT_NOT_FOUND], 404);
+        }
+
+        if ($project->status !== ProjectRequest::STATUS_PLAN_SENT) {
+            $this->json(['ok' => false, 'message' => 'Plan cannot be accepted in the current project state'], 409);
+        }
+
         $project = $this->projects->updateStatus($projectId, ProjectRequest::STATUS_IN_PROGRESS);
 
         if ($project === null) {
@@ -117,7 +126,16 @@ final class ProjectController extends Controller
     public function requestChanges(string $projectId): void
     {
         AuthMiddleware::requireAuth();
+        $project = $this->findOwnedProject($projectId);
         $feedback = trim((string) ($_POST['feedback'] ?? ''));
+
+        if ($project === null) {
+            $this->json(['ok' => false, 'message' => self::PROJECT_NOT_FOUND], 404);
+        }
+
+        if ($project->status !== ProjectRequest::STATUS_PLAN_SENT) {
+            $this->json(['ok' => false, 'message' => 'Feedback can only be submitted after a plan is sent'], 409);
+        }
 
         if ($feedback === '') {
             $this->json(['ok' => false, 'message' => 'Feedback is required'], 422);
@@ -144,7 +162,7 @@ final class ProjectController extends Controller
     public function apiShow(string $projectId): void
     {
         AuthMiddleware::requireAuth();
-        $project = $this->projects->findById($projectId);
+        $project = $this->findOwnedProject($projectId);
 
         if ($project === null) {
             $this->json(['ok' => false, 'message' => self::PROJECT_NOT_FOUND], 404);
@@ -192,5 +210,18 @@ final class ProjectController extends Controller
         }
 
         return implode("\n\n", $parts);
+    }
+
+    private function findOwnedProject(string $projectId): ?ProjectRequest
+    {
+        $project = $this->projects->findById($projectId);
+        $user = Session::get('auth_user', []);
+        $userId = (string) ($user['id'] ?? '');
+
+        if ($project === null || $userId === '' || $project->clientId !== $userId) {
+            return null;
+        }
+
+        return $project;
     }
 }

@@ -131,10 +131,10 @@ const Landing = () => {
         </div>
         <div className="border-t border-blue-200 py-6 px-16 flex flex-col md:flex-row justify-between items-center gap-4">
            <div className="flex items-center gap-2 text-slate-600"><span>📧</span> support@contify.com</div>
-           <div className="flex gap-6 text-xl text-slate-700">
-             <span className="cursor-pointer hover:text-blue-600 transition">𝕏</span>
-             <span className="cursor-pointer hover:text-blue-600 transition">Facebook</span>
-             <a href="https://www.linkedin.com/in/muskan-kumari-497351285/" className="hover:text-blue-600 transition underline">LinkedIn</a>
+           <div className="flex gap-6 text-base text-slate-700 font-medium">
+             <a href="https://x.com" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-blue-600 transition">X</a>
+             <a href="https://www.facebook.com" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-blue-600 transition">Facebook</a>
+             <a href="https://www.linkedin.com" target="_blank" rel="noreferrer" className="hover:text-blue-600 transition underline">LinkedIn</a>
            </div>
         </div>
         <div className="bg-[#1734a1] text-white py-3 text-center font-medium italic">@ 2026 Contify</div>

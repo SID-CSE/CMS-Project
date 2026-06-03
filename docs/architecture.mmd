@@ -1,0 +1,50 @@
+flowchart TB
+    subgraph Repo[Contify CMS Repository]
+        direction TB
+        Root[Project Root README\nRelease overview + links]
+    end
+
+    subgraph Client[React + Vite Client]
+        Landing[Public landing page]
+        Router[React Router]
+        Services[API services]
+        Context[Auth context]
+    end
+
+    subgraph Spring[Spring Boot API]
+        Api[REST controllers]
+        Security[Auth + CORS]
+        Docs[API documentation]
+    end
+
+    subgraph PHP[PHP 8.3 MVC App]
+        Front[public/index.php router]
+        Controllers[Role-based controllers]
+        Views[SSR views]
+        Session[Session auth]
+    end
+
+    DB[(MySQL database)]
+    Cloud[(Cloudinary - media storage & CDN)]
+
+    Landing --> Router
+    Router --> Services
+    Services --> Api
+    Api --> DB
+    Api --> Cloud
+    Security --> Api
+    Context --> Services
+
+    Front --> Controllers
+    Controllers --> Views
+    Controllers --> Session
+    Controllers --> DB
+    Controllers --> Cloud
+
+    Root --> Landing
+    Root --> Docs
+    Root --> Front
+    Root --> Cloud
+
+    classDef note fill:#f8fafc,stroke:#94a3b8,color:#0f172a;
+    class Root,Docs note;

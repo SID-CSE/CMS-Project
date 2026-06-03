@@ -700,3 +700,9 @@ When adding features:
 - **Want to understand architecture?** See root `README.md`
 - **Need route reference?** See Routing section above
 - **Database issues?** Check migrations/ folder and `HELP.md`
+
+## 🔐 Security Notes
+
+- Stakeholder project actions are limited to the logged-in owner of that project.
+- Admin-only workflow actions remain restricted by role checks in the controller layer.
+- Keep local `.env` files and any credential notes out of Git before publishing the final repository.

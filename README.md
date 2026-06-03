@@ -297,13 +297,13 @@ Then run MySQL migrations (see `php_project/README.md`).
 
 ---
 
-## 📝 Project Status
+## 📝 Current Release Status
 
-✅ **React + Spring**: Full implementation with all features  
-✅ **PHP**: Complete rewrite with SSR, all major features ported  
-✅ **Recent Additions**: Media dashboards, messaging UI enhancements, role-specific pages
+✅ **React + Spring**: Client build verified, API documentation available in `server/API_DOCUMENTATION.md`  
+✅ **PHP**: SSR implementation with session auth, role-based routing, and project-ownership checks on stakeholder actions  
+✅ **Shared docs**: Root README now points to the release diagram and LinkedIn caption assets below
 
-**Next Phase**: Enhanced content management, profile customization, admin analytics
+**Validation note**: The React client and PHP controllers were re-checked during this cleanup pass.
 
 ---
 
@@ -322,6 +322,11 @@ When adding features:
 - **React/Spring questions**: See `server/API_DOCUMENTATION.md`
 - **PHP questions**: See `php_project/README.md` and `php_project/HELP.md`
 - **Database issues**: Check migration files in `php_project/migrations/`
+
+## 📦 Release Assets
+
+- Architecture diagram: `docs/architecture.mmd`
+- LinkedIn caption draft: `docs/linkedin-caption.md`
 
 ## Repository Hygiene
 

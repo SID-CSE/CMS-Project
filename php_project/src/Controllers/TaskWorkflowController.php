@@ -168,6 +168,16 @@ final class TaskWorkflowController extends Controller
             $this->redirect(self::DASHBOARD_PATH);
         }
 
+        $project = $this->findOwnedProject($projectId);
+        if ($project === null) {
+            $this->redirect('/stakeholder/projects');
+        }
+
+        if ($project->status !== ProjectRequest::STATUS_DELIVERED) {
+            Session::set('flash_error', 'Final sign-off is only available after delivery is completed.');
+            $this->redirect('/stakeholder/projects/' . $projectId);
+        }
+
         $ratingRaw = (string) ($_POST['rating'] ?? '');
         $rating = $ratingRaw === '' ? null : (int) $ratingRaw;
         $feedback = trim((string) ($_POST['feedback'] ?? ''));
@@ -418,5 +428,18 @@ final class TaskWorkflowController extends Controller
         }
 
         return null;
+    }
+
+    private function findOwnedProject(string $projectId): ?ProjectRequest
+    {
+        $project = $this->projects->findById($projectId);
+        $user = Session::get('auth_user', []);
+        $userId = (string) ($user['id'] ?? '');
+
+        if ($project === null || $userId === '' || $project->clientId !== $userId) {
+            return null;
+        }
+
+        return $project;
     }
 }
