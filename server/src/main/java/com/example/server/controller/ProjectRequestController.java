@@ -32,7 +32,6 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/projects")
 @Validated
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"})
 public class ProjectRequestController {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectRequestController.class);

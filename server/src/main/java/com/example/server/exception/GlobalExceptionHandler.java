@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,17 +18,18 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
+    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex, HttpServletRequest request) {
         log.error("Runtime exception: {}", ex.getMessage());
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
-        response.put("message", ex.getMessage());
+        response.put("message", ex.getMessage() == null ? "Unable to process request" : ex.getMessage());
         response.put("timestamp", LocalDateTime.now());
+        response.put("path", request.getRequestURI());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
         log.error("Validation exception: {}", ex.getMessage());
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
@@ -39,17 +41,19 @@ public class GlobalExceptionHandler {
         );
         response.put("errors", errors);
         response.put("timestamp", LocalDateTime.now());
+        response.put("path", request.getRequestURI());
         
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex, HttpServletRequest request) {
         log.error("Unexpected exception: {}", ex.getMessage(), ex);
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
         response.put("message", "An unexpected error occurred");
         response.put("timestamp", LocalDateTime.now());
+        response.put("path", request.getRequestURI());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }

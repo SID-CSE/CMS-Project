@@ -22,12 +22,12 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const result = await authService.login({ email, password });
-      if (result.ok) {
+      if (result.ok && result.user) {
         setUser(result.user);
         return { ok: true, user: result.user };
       } else {
         setError(result.message);
-        return { ok: false, message: result.message };
+        return { ok: result.ok, requiresVerification: result.requiresVerification, verificationEmail: result.verificationEmail, developmentVerificationUrl: result.developmentVerificationUrl, message: result.message };
       }
     } catch (err) {
       setError(err.message);

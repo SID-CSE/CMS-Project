@@ -16,7 +16,6 @@ import com.example.server.service.ProjectService;
 
 @RestController
 @RequestMapping({"/api/stakeholder/tasks", "/api/client/tasks"})
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"})
 public class ClientTaskController {
 
     private final ProjectService projectService;

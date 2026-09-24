@@ -2,7 +2,6 @@ package com.example.server;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
@@ -16,7 +15,6 @@ public class ServerApplication {
 		SpringApplication.run(ServerApplication.class, args);
 	}
 
-	@CrossOrigin
 	@GetMapping("/")
 	public Map<String, String> root() {
 		Map<String, String> response = new HashMap<>();
@@ -26,12 +24,11 @@ public class ServerApplication {
 		return response;
 	}
 
-	@CrossOrigin
-	@GetMapping("/health")
+	@GetMapping({"/health", "/api/health"})
 	public Map<String, String> health(){
 		Map<String, String> response = new HashMap<>();
 		response.put("status", "UP");
-		response.put("timestamp", String.valueOf(System.currentTimeMillis()));
+		response.put("service", "Contify CMS");
 		return response;
 	}
 

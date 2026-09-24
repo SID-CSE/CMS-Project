@@ -31,6 +31,7 @@ const Landing = () => {
         </div>
         <div className="flex gap-4">
           <button onClick={() => navigate('/login')} className="bg-black text-white px-8 py-1.5 rounded-full text-sm font-medium hover:opacity-80 transition">LogIn</button>
+          <button onClick={() => navigate('/demo')} className="bg-cyan-700 text-white px-8 py-1.5 rounded-full text-sm font-medium hover:bg-cyan-800 transition">Try Demo</button>
           <button onClick={() => navigate('/roles')} className="bg-[#1734a1] text-white px-8 py-1.5 rounded-full text-sm font-medium hover:bg-blue-800 transition">SignUp</button>
         </div>
       </nav>

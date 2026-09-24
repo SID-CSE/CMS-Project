@@ -76,15 +76,19 @@ export const authService = {
         password,
       });
 
-      const payload = response.data;
-      if (payload?.token) {
-        localStorage.setItem('authToken', payload.token);
+      const payload = response.data || response;
+      const authData = payload.data || payload;
+      if (authData?.token) {
+        localStorage.setItem('authToken', authData.token);
       }
-      setCurrentUser(payload?.user);
+      if (authData?.token) setCurrentUser(authData?.user);
 
       return {
         ok: true,
-        user: payload?.user,
+        user: authData?.user,
+        requiresVerification: Boolean(authData?.emailVerificationRequired),
+        verificationEmail: authData?.verificationEmail,
+        developmentVerificationUrl: authData?.developmentVerificationUrl,
       };
     } catch (error) {
       return {
@@ -101,21 +105,59 @@ export const authService = {
         password,
       });
 
-      const payload = response.data;
-      if (payload?.token) {
-        localStorage.setItem('authToken', payload.token);
+      const payload = response.data || response;
+      const authData = payload.data || payload;
+      if (authData?.token) {
+        localStorage.setItem('authToken', authData.token);
       }
-      setCurrentUser(payload?.user);
+      setCurrentUser(authData?.user);
 
       return {
         ok: true,
-        user: payload?.user,
+        user: authData?.user,
       };
     } catch (error) {
       return {
         ok: false,
         message: error.message || 'Login failed',
       };
+    }
+  },
+
+  async googleSignIn(credential, role = 'STAKEHOLDER') {
+    try {
+      const response = await apiClient.post('/auth/google', { credential, role });
+      const payload = response.data || response;
+      const authData = payload.data || payload;
+      if (!authData?.token || !authData?.user) throw new Error('Google sign-in did not return an authenticated session.');
+      localStorage.setItem('authToken', authData.token);
+      setCurrentUser(authData.user);
+      return { ok: true, user: authData.user };
+    } catch (error) {
+      return { ok: false, message: error.message || 'Google sign-in failed.' };
+    }
+  },
+
+  async verifyEmail(token) {
+    try {
+      const response = await apiClient.get(`/auth/verify-email?token=${encodeURIComponent(token || '')}`);
+      return { ok: true, message: response.message || 'Email verified successfully.' };
+    } catch (error) {
+      return { ok: false, message: error.message || 'Unable to verify email.' };
+    }
+  },
+
+  async resendVerification(email) {
+    try {
+      const response = await apiClient.post('/auth/resend-verification', { email });
+      const data = response.data || {};
+      return {
+        ok: true,
+        message: response.message || 'If the account can receive verification, instructions have been sent.',
+        developmentVerificationUrl: data.developmentVerificationUrl,
+      };
+    } catch (error) {
+      return { ok: false, message: error.message || 'Unable to resend verification email.' };
     }
   },
 

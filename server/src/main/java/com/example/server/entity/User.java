@@ -109,6 +109,10 @@ public class User {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    // NULL is retained for legacy rows so existing users are not blocked by the new policy.
+    @Column(name = "email_verified")
+    private Boolean emailVerified;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -223,6 +227,9 @@ public class User {
 
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public Boolean getEmailVerified() { return emailVerified; }
+    public void setEmailVerified(Boolean emailVerified) { this.emailVerified = emailVerified; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
