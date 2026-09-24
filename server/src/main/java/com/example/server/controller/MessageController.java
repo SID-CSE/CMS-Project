@@ -24,7 +24,6 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/messages")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"})
 public class MessageController {
 
     private final MessageService messageService;

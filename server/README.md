@@ -30,3 +30,5 @@ mvnw test
 
 - Runtime values should be in local `.env`
 - Keep `.env.example` as template only
+- Required deployment variables are `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `FRONTEND_URL`, and platform-provided `PORT`.
+- Health check: `GET /api/health` returns the service status without sensitive data.

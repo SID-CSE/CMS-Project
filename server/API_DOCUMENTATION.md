@@ -37,10 +37,25 @@ Check the console output for their IDs.
 
 ## API Endpoints
 
+### Authentication
+
+```text
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/google
+GET  /api/auth/verify-email?token={token}
+POST /api/auth/resend-verification
+POST /api/auth/forgot-password
+POST /api/auth/reset-password
+```
+
+New password registrations return `emailVerificationRequired=true` and no JWT until the verification link is used. Existing users with `email_verified IS NULL` remain eligible to log in. Google sign-in accepts a Google Identity Services ID token; Spring Boot verifies its audience and verified email before issuing a Contify JWT.
+
 ### Health Check
 ```
 GET http://localhost:9090/
 GET http://localhost:9090/health
+GET http://localhost:9090/api/health
 ```
 
 ### STAGE 1 & 3: STAKEHOLDER ENDPOINTS

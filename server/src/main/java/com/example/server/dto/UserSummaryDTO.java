@@ -8,6 +8,7 @@ public class UserSummaryDTO {
     private String role;
     private String profileImage;
     private String team;
+    private Boolean emailVerified;
     
     public UserSummaryDTO() {
     }
@@ -75,4 +76,7 @@ public class UserSummaryDTO {
     public void setTeam(String team) {
         this.team = team;
     }
+
+    public Boolean getEmailVerified() { return emailVerified; }
+    public void setEmailVerified(Boolean emailVerified) { this.emailVerified = emailVerified; }
 }

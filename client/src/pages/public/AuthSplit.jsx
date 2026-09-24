@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authService, getDashboardPathForRole } from '../../services/authService';
@@ -62,11 +62,15 @@ export default function AuthSplit({ initialMode = 'login' }) {
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [signupError, setSignupError] = useState('');
+  const [signupMessage, setSignupMessage] = useState('');
+  const [verificationUrl, setVerificationUrl] = useState('');
   const [forgotError, setForgotError] = useState('');
   const [forgotMessage, setForgotMessage] = useState('');
   const [forgotSubmitting, setForgotSubmitting] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const googleLoginRef = useRef(null);
+  const googleSignupRef = useRef(null);
 
   const defaultRole = useMemo(() => normalizeRole(roleName || localStorage.getItem('selectedRole')), [roleName]);
 
@@ -78,7 +82,10 @@ export default function AuthSplit({ initialMode = 'login' }) {
     password: '',
     role: defaultRole,
   });
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [forgotEmail, setForgotEmail] = useState('');
+  const isSignup = mode === 'signup';
+  const isForgot = mode === 'forgot';
 
   useEffect(() => {
     setMode(initialMode === 'signup' ? 'signup' : initialMode === 'forgot' ? 'forgot' : 'login');
@@ -92,8 +99,51 @@ export default function AuthSplit({ initialMode = 'login' }) {
     }
   }, [defaultRole, roleName]);
 
-  const isSignup = mode === 'signup';
-  const isForgot = mode === 'forgot';
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) return undefined;
+
+    const renderGoogleButtons = () => {
+      if (!window.google?.accounts?.id) return;
+      const callback = async (response) => {
+        const result = await authService.googleSignIn(response.credential, isSignup ? signupForm.role : 'STAKEHOLDER');
+        if (!result.ok) {
+          if (isSignup) setSignupError(result.message);
+          else setLoginError(result.message);
+          return;
+        }
+        navigate(getDashboardPathForRole(result.user?.role));
+      };
+
+      window.google.accounts.id.initialize({ client_id: clientId, callback });
+      [googleLoginRef.current, googleSignupRef.current].forEach((element) => {
+        if (!element) return;
+        element.replaceChildren();
+        window.google.accounts.id.renderButton(element, { theme: 'outline', size: 'large', width: 360, text: 'continue_with' });
+      });
+    };
+
+    if (window.google?.accounts?.id) {
+      renderGoogleButtons();
+      return undefined;
+    }
+
+    let script = document.querySelector('script[data-contify-google-identity]');
+    if (!script) {
+      script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.dataset.contifyGoogleIdentity = 'true';
+      script.addEventListener('load', renderGoogleButtons, { once: true });
+      document.head.appendChild(script);
+    } else {
+      script.addEventListener('load', renderGoogleButtons, { once: true });
+    }
+
+    return undefined;
+  }, [isSignup, navigate, signupForm.role]);
+
   const roleMeta = ROLE_DATA[signupForm.role] || ROLE_DATA.STAKEHOLDER;
   const strength = passwordStrength(signupForm.password);
   const sidePanelImage = isForgot ? sidePanelForgotImage : sidePanelDefaultImage;
@@ -119,9 +169,17 @@ export default function AuthSplit({ initialMode = 'login' }) {
     e.preventDefault();
     setLoading(true);
     setSignupError('');
+    setSignupMessage('');
+    setVerificationUrl('');
 
     const payloadName = signupForm.name.trim();
     const payloadUsername = signupForm.username.trim() || payloadName.split(' ')[0] || 'user';
+
+    if (signupForm.password !== confirmPassword) {
+      setSignupError('Passwords do not match.');
+      setLoading(false);
+      return;
+    }
 
     const result = await register(
       signupForm.email,
@@ -133,6 +191,13 @@ export default function AuthSplit({ initialMode = 'login' }) {
 
     if (!result.ok) {
       setSignupError(result.message || 'Sign up failed.');
+      setLoading(false);
+      return;
+    }
+
+    if (result.requiresVerification) {
+      setSignupMessage(`Check your email. We sent a verification link to ${result.verificationEmail || signupForm.email}.`);
+      setVerificationUrl(result.developmentVerificationUrl || '');
       setLoading(false);
       return;
     }
@@ -648,9 +713,10 @@ export default function AuthSplit({ initialMode = 'login' }) {
                 </form>
 
                 <div className="split-auth-divider">or</div>
-                <button type="button" className="split-auth-btn split-auth-btn-google">
-                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" height="18" alt="Google" />
-                  Continue with Google
+                {import.meta.env.VITE_GOOGLE_CLIENT_ID ? <div ref={googleLoginRef} /> : <button type="button" className="split-auth-btn split-auth-btn-google" onClick={() => setLoginError('Google sign-in is not configured for this environment.')}>Continue with Google</button>}
+
+                <button type="button" className="split-auth-btn split-auth-btn-primary" onClick={() => navigate('/demo')}>
+                  Try Demo (read-only)
                 </button>
 
                 <div className="split-auth-links">
@@ -727,6 +793,7 @@ export default function AuthSplit({ initialMode = 'login' }) {
                 <p className="split-auth-subtitle">Signing up as {roleMeta.label}.</p>
 
                 {signupError && <div className="split-auth-flash split-auth-error">{signupError}</div>}
+                {signupMessage && <div className="split-auth-flash split-auth-success">{signupMessage}{verificationUrl && <><br /><a href={verificationUrl} target="_blank" rel="noreferrer">Open local verification link</a></>}</div>}
 
                 <form onSubmit={onSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <input
@@ -772,6 +839,16 @@ export default function AuthSplit({ initialMode = 'login' }) {
                     </button>
                   </div>
 
+                  <input
+                    className="split-auth-input"
+                    type="password"
+                    placeholder="Confirm Password"
+                    minLength={6}
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+
                   <div className="strength-wrap">
                     <div className="strength-bar">
                       <div className="strength-fill" style={{ width: strength.width, backgroundColor: strength.color }}></div>
@@ -787,10 +864,7 @@ export default function AuthSplit({ initialMode = 'login' }) {
                 </form>
 
                 <div className="split-auth-divider">or</div>
-                <button type="button" className="split-auth-btn split-auth-btn-google">
-                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" height="18" alt="Google" />
-                  Sign up with Google
-                </button>
+                {import.meta.env.VITE_GOOGLE_CLIENT_ID ? <div ref={googleSignupRef} /> : <button type="button" className="split-auth-btn split-auth-btn-google" onClick={() => setSignupError('Google sign-in is not configured for this environment.')}>Sign up with Google</button>}
 
                 <button className="split-auth-link back-role-btn" type="button" onClick={() => setSignupStep('role')}>
                   ← Back to role selection

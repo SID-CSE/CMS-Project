@@ -1,0 +1,1 @@
+Built Contify CMS — a role-based content workflow platform connecting stakeholders, admins, and editors. Dual implementations included: a modern React + Spring API-driven SPA and a PHP 8.3 MVC SSR app. Media assets are stored in Cloudinary (cloud CDN). Ready for demo with documentation and architecture diagram. #FullStack #React #SpringBoot #PHP

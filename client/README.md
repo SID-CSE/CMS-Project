@@ -31,5 +31,11 @@ npm run preview
 Primary frontend API variable:
 
 ```env
-VITE_API_BASE_URL=http://localhost:9090/api
+VITE_API_URL=http://localhost:9090/api
+VITE_GOOGLE_CLIENT_ID=
 ```
+
+For Vercel, set `VITE_API_URL` to the deployed Spring Boot URL ending in `/api`.
+Set `VITE_GOOGLE_CLIENT_ID` to the Google Web OAuth client ID for the deployed frontend origin.
+
+Local location: create `client/.env` beside this README. Vercel location: Project Settings → Environment Variables. Only `VITE_*` values belong there.
