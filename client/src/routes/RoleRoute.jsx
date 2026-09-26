@@ -3,6 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getDashboardPathForRole } from "../services/authService";
 import { authService } from "../services/authService";
+import { isDemoMode } from "../services/demoService";
 
 function LegacyVerificationBanner({ user }) {
   const [message, setMessage] = useState('');
@@ -38,9 +39,9 @@ export default function RoleRoute({ children, allowedRoles }) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  if (!allowedRoles || allowedRoles.length === 0) {
-    return children;
-  }
+  if (isDemoMode()) return <>{children}<DemoBanner /></>;
+
+  if (!allowedRoles || allowedRoles.length === 0) return children;
 
   const currentRole = normalizeRole(user.role);
   const allowed = allowedRoles.map(normalizeRole);
@@ -49,4 +50,12 @@ export default function RoleRoute({ children, allowedRoles }) {
   }
 
   return <>{children}<LegacyVerificationBanner user={user} /></>;
+}
+
+function DemoBanner() {
+  return (
+    <div className="fixed bottom-4 left-4 right-4 z-40 mx-auto flex max-w-3xl items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 shadow-lg">
+      <span><strong>Read-only demo.</strong> You are viewing sample data. Changes, resources, and cloud uploads are disabled.</span>
+    </div>
+  );
 }

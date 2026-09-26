@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "demo:upload-media": "node scripts/upload-demo-media.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

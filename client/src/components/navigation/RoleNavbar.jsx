@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { notificationService } from "../../services/notificationService";
 import { getDashboardPathForRole } from "../../services/authService";
 import { getRoleNavigation, isRoleRouteActive } from "./roleNavigationConfig";
+import { isDemoMode } from "../../services/demoService";
 
 function MenuIcon() {
   return (
@@ -135,6 +136,12 @@ export default function RoleNavbar({
 
   const profileName = user?.name || config.portalLabel;
   const profileSubLabel = user?.email || config.subtitle;
+  const demo = isDemoMode();
+  const demoRolePaths = [
+    ["Admin", "/admin/dashboard"],
+    ["Editor", "/editor/dashboard"],
+    ["Stakeholder", "/stakeholder/home"],
+  ];
 
   return (
     <header
@@ -157,7 +164,7 @@ export default function RoleNavbar({
 
           <button
             type="button"
-            onClick={() => navigate(getDashboardPathForRole(userRole))}
+            onClick={() => navigate(getDashboardPathForRole(user?.role))}
             className="hover:opacity-75 transition cursor-pointer flex flex-col items-start gap-0.5"
           >
             <p className="text-sm font-semibold tracking-wide text-slate-900">Contify</p>
@@ -205,6 +212,20 @@ export default function RoleNavbar({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          {demo ? (
+            <div className="hidden items-center gap-1 rounded-xl border border-amber-200 bg-amber-50 p-1 lg:flex" aria-label="Demo role views">
+              {demoRolePaths.map(([label, path]) => (
+                <button
+                  key={path}
+                  type="button"
+                  onClick={() => navigate(path)}
+                  className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${location.pathname.startsWith(path.split('/').slice(0, 2).join('/')) ? "bg-amber-200 text-amber-950" : "text-amber-800 hover:bg-amber-100"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <button
             type="button"
             onClick={handleToggleNotifications}

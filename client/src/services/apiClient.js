@@ -1,8 +1,16 @@
 // Base API Configuration
 const API_BASE_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:9090/api').replace(/\/$/, '');
+import { demoResponse } from './demoData';
 
 class ApiClient {
   async request(endpoint, options = {}) {
+    const isDemo = localStorage.getItem('authToken') === 'contify-demo-token';
+    const method = (options.method || 'GET').toUpperCase();
+    if (isDemo && method !== 'GET') {
+      throw new Error('This action is disabled in the read-only demo.');
+    }
+    if (isDemo) return demoResponse(endpoint);
+
     const url = `${API_BASE_URL}${endpoint}`;
     const headers = {
       'Content-Type': 'application/json',

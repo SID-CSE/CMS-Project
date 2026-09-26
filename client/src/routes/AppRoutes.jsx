@@ -52,6 +52,7 @@ import StakeholderNotifications from "../pages/stakeholder/StakeholderNotificati
 import StakeholderStreaming from "../pages/stakeholder/StakeholderStreaming";
 import CreateProjectRequest from "../pages/stakeholder/CreateProjectRequest";
 import EditorStreaming from "../pages/editor/EditorStreaming";
+import { enterDemoMode } from "../services/demoService";
 import RoleRoute from "./RoleRoute";
 import { authService, getDashboardPathForRole } from "../services/authService";
 
@@ -66,12 +67,17 @@ function guard(allowedRoles, element) {
   return <RoleRoute allowedRoles={allowedRoles}>{element}</RoleRoute>;
 }
 
+function DemoEntry() {
+  enterDemoMode();
+  return <Navigate to="/admin/dashboard" replace />;
+}
+
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Public */}
       <Route path="/" element={<Landing />} />
-      <Route path="/demo" element={<GuestDemo />} />
+      <Route path="/demo" element={<DemoEntry />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
