@@ -21,7 +21,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: client/package-lock.json
 
@@ -29,14 +29,14 @@ jobs:
         working-directory: client
         run: npm ci
 
+      - name: Lint frontend
+        working-directory: client
+        run: npm run lint
+
       - name: Build frontend
         working-directory: client
         run: npm run build
 
-      - name: Test backend
+      - name: Verify backend
         working-directory: server
-        run: ./mvnw test
-
-      - name: Package backend
-        working-directory: server
-        run: ./mvnw clean package -DskipTests
+        run: ./mvnw -B clean verify

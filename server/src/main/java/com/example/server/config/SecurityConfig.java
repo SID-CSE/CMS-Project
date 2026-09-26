@@ -25,7 +25,7 @@ import com.example.server.security.JwtAuthenticationFilter;
 @Configuration
 public class SecurityConfig {
 
-    @Value("${FRONTEND_URL:http://localhost:5173}")
+    @Value("${FRONTEND_URL}")
     private String frontendUrl;
 
     @Bean

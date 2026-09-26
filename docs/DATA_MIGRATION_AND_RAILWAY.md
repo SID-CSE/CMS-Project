@@ -40,7 +40,7 @@ There was no email verification field. The new design adds nullable `users.email
    ```
 
 7. Verify counts before applying the additive migration.
-8. Run `server/migrations/001_add_email_verification.sql` manually, or allow the current `spring.jpa.hibernate.ddl-auto=update` setting to add the same nullable column/table during a controlled first deployment. Do not do both blindly.
+8. Run `server/migrations/001_add_email_verification.sql` manually after the backup and data import. Production starts with `SPRING_PROFILES_ACTIVE=prod` and `spring.jpa.hibernate.ddl-auto=validate`; do not rely on Hibernate to alter the schema.
 
 ## Data Verification Queries
 
@@ -71,11 +71,13 @@ Create a Railway service from the repository and set its root directory to `serv
 In Railway, open the Spring Boot service, select **Variables**, click **New Variable**, and add each variable below. Do not paste these into `application.properties`, commit them, or add them to the React project.
 
 ```env
-DB_URL=jdbc:mysql://RAILWAY_HOST:RAILWAY_PORT/RAILWAY_DATABASE?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
+DB_URL=jdbc:mysql://RAILWAY_HOST:RAILWAY_PORT/RAILWAY_DATABASE?useSSL=true&sslMode=VERIFY_IDENTITY&serverTimezone=UTC&allowPublicKeyRetrieval=true
+SPRING_PROFILES_ACTIVE=prod
 DB_USERNAME=RAILWAY_USER
 DB_PASSWORD=RAILWAY_PASSWORD
 JWT_SECRET=LONG_RANDOM_SECRET_AT_LEAST_32_CHARACTERS
 FRONTEND_URL=https://YOUR-VERCEL-DOMAIN
+FRONTEND_BASE_URL=https://YOUR-VERCEL-DOMAIN
 MAIL_ENABLED=true
 MAIL_HOST=YOUR_SMTP_HOST
 MAIL_PORT=587

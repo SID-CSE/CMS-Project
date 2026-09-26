@@ -1,0 +1,52 @@
+{
+  "components": [
+    {
+      "name": "client",
+      "path": "client",
+      "type": "spa",
+      "detectedStack": "React 19 + Vite",
+      "verdicts": { "build": "PASS", "completeness": "WARN", "deployability": "WARN" },
+      "entryPoint": "index.html",
+      "healthEndpoint": null,
+      "buildRequirements": { "hasNativeModules": "unknown", "hasDockerfile": false, "f1Viable": false, "f1BlockReason": "build-time compilation" }
+    },
+    {
+      "name": "server",
+      "path": "server",
+      "type": "rest-api",
+      "detectedStack": "Spring Boot 4.0.5 + Java 21 + MySQL",
+      "verdicts": { "build": "PASS", "completeness": "WARN", "deployability": "WARN" },
+      "entryPoint": null,
+      "healthEndpoint": "/api/health",
+      "buildRequirements": { "hasNativeModules": "unknown", "hasDockerfile": false, "f1Viable": false, "f1BlockReason": "JVM service requires a managed runtime or container" }
+    },
+    {
+      "name": "php_project",
+      "path": "php_project",
+      "type": "legacy-web-app",
+      "detectedStack": "PHP MVC",
+      "verdicts": { "build": "SKIPPED", "completeness": "WARN", "deployability": "WARN" },
+      "entryPoint": "public/index.php",
+      "healthEndpoint": null,
+      "buildRequirements": { "hasNativeModules": "unknown", "hasDockerfile": false, "f1Viable": false, "f1BlockReason": "not part of documented production architecture" }
+    }
+  ],
+  "warnings": [
+    { "id": "W-INFRA", "component": "repository", "axis": "deployability", "summary": "No Docker, IaC, or CI/CD deployment configuration detected.", "detail": "The documented Vercel + Render path is manual and has no reproducible deployment pipeline in the repository.", "fix": "Add deployment configuration and CI checks for client and server.", "fixPhase": "scaffold" },
+    { "id": "W-DB-TLS", "component": "server", "axis": "deployability", "summary": "Local JDBC fallback disables MySQL TLS.", "detail": "application.properties uses useSSL=false in the fallback URL; production must provide a TLS-enabled DB_URL.", "fix": "Make DB_URL mandatory in production and require useSSL=true with the provider CA/TLS settings.", "fixPhase": "prereq" },
+    { "id": "W-DDL-AUTO", "component": "server", "axis": "deployability", "summary": "Hibernate schema auto-update is enabled.", "detail": "spring.jpa.hibernate.ddl-auto=update is unsafe for controlled production migrations.", "fix": "Use validate or none in production and run versioned migrations explicitly.", "fixPhase": "prereq" },
+    { "id": "W-JWT-FALLBACK", "component": "server", "axis": "security", "summary": "JWT has a weak fallback secret.", "detail": "The application has a development secret fallback if JWT_SECRET is absent.", "fix": "Fail startup when JWT_SECRET is missing or too short in production.", "fixPhase": "prereq" },
+    { "id": "W-CORS-DUP", "component": "server", "axis": "security", "summary": "CORS is configured in two layers.", "detail": "SecurityConfig and AppConfig both register CORS behavior, increasing drift risk.", "fix": "Keep one authoritative CORS configuration and test exact production origins.", "fixPhase": "prereq" },
+    { "id": "W-HEALTH", "component": "client", "axis": "completeness", "summary": "No frontend health endpoint is defined.", "detail": "Static hosting can serve /, but deployment probes and smoke checks are not formalized.", "fix": "Use the static root check and add deployment smoke tests.", "fixPhase": "scaffold" },
+    { "id": "W-PHP-SCOPE", "component": "php_project", "axis": "deployability", "summary": "Legacy PHP implementation has no deployment manifest.", "detail": "It is explicitly out of scope in the root README and should not be deployed with the React/Spring system.", "fix": "Exclude php_project from production builds or document a separate PHP deployment.", "fixPhase": "deploy-gate" },
+    { "id": "W-LOCALHOST", "component": "client/server", "axis": "deployability", "summary": "Development localhost defaults remain in runtime configuration.", "detail": "They are acceptable for local development but must be overridden and verified in deployment environments.", "fix": "Set VITE_API_URL and FRONTEND_URL to exact HTTPS production origins.", "fixPhase": "scaffold" }
+  ],
+  "detectedStack": "React SPA + Spring Boot REST API + MySQL; legacy PHP MVC also present",
+  "fastTrackEligible": false,
+  "overallHealth": "blocked",
+  "healthEndpoint": "/api/health",
+  "postDeployRecommendations": [
+    { "title": "Add CI smoke checks", "reason": "No repository deployment workflow is detected.", "effort": "medium", "services": ["Vercel", "Render"] },
+    { "title": "Monitor startup and database connectivity", "reason": "The backend depends on external MySQL, SMTP, Google OAuth, and Cloudinary configuration.", "effort": "medium", "services": ["Render", "TiDB Cloud"] }
+  ]
+}

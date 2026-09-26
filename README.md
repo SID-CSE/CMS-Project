@@ -19,7 +19,7 @@ The deployable application is `client/` plus `server/`. The legacy `php_project/
 
 ## Local Development
 
-Prerequisites: Node.js 18+, Java 21+, Maven wrapper, and MySQL 8+.
+Prerequisites: Node.js 22.12+, Java 21+, Maven wrapper, and MySQL 8+.
 
 1. Copy `server/.env.example` to `server/.env` and set local MySQL values and a local JWT secret.
 2. Copy `client/.env.example` to `client/.env`.
@@ -27,8 +27,10 @@ Prerequisites: Node.js 18+, Java 21+, Maven wrapper, and MySQL 8+.
 
    ```bash
    cd server
-   mvnw spring-boot:run
+   SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
    ```
+
+   In PowerShell, use `$env:SPRING_PROFILES_ACTIVE="dev"; .\mvnw.cmd spring-boot:run`.
 
    The backend uses `http://localhost:9090` locally.
 
@@ -50,9 +52,9 @@ Use these locations; do not put backend secrets in React files:
 
 | Environment | Location | Values to enter |
 |---|---|---|
-| Local backend | Create `server/.env` by copying `server/.env.example` | `DB_*`, `JWT_SECRET`, `FRONTEND_URL`, `MAIL_*`, `GOOGLE_CLIENT_ID` |
+| Local backend | Create `server/.env` by copying `server/.env.example` | `DB_*`, `JWT_SECRET`, `FRONTEND_URL`, `FRONTEND_BASE_URL`, `MAIL_*`, `GOOGLE_CLIENT_ID` |
 | Local frontend | Create `client/.env` by copying `client/.env.example` | `VITE_API_URL`, `VITE_GOOGLE_CLIENT_ID`, and optional public Cloudinary values |
-| Railway backend | Railway project → Spring service → **Variables** | `DB_*`, `JWT_SECRET`, `FRONTEND_URL`, `MAIL_*`, `GOOGLE_CLIENT_ID` |
+| Render backend | Render service → **Environment** | `DB_*`, `JWT_SECRET`, `FRONTEND_URL`, `FRONTEND_BASE_URL`, `MAIL_*`, `GOOGLE_CLIENT_ID` |
 | Vercel frontend | Vercel project → **Settings → Environment Variables** | `VITE_API_URL`, `VITE_GOOGLE_CLIENT_ID`, and optional public Cloudinary values |
 | Google OAuth | Google Cloud Console → OAuth client → **Authorized JavaScript origins** | `http://localhost:5173` and your Vercel URL |
 
@@ -60,21 +62,23 @@ Never commit `server/.env` or `client/.env`. Never enter `DB_PASSWORD`, `JWT_SEC
 
 ## Production Deployment
 
-### 1. Create MySQL
+### 1. Create Free MySQL-Compatible Database
 
-Use a managed MySQL provider and create the `Contify` database. Collect the provider JDBC URL, username, password, SSL requirements, host, port, and database name. Do not commit any of these values.
+Use a free TiDB Cloud Starter database. TiDB speaks the MySQL protocol and works with the existing JDBC driver. Back up local `Contify` first, import the dump, and verify counts and stable user IDs. Do not commit database credentials.
 
 ### 2. Deploy Spring Boot
 
-Deploy `server/` to Railway. In Railway, open the Spring service, select **Variables**, and add these values individually:
+Deploy `server/` to a Render Free Web Service. In Render, open the service's **Environment** tab and add these values individually:
 
 | Variable | Purpose | Local example | Production value |
 |---|---|---|---|
-| `DB_URL` | MySQL JDBC URL | `jdbc:mysql://localhost:3306/Contify` | Provider JDBC URL |
-| `DB_USERNAME` | Database user | `root` | Managed DB user |
-| `DB_PASSWORD` | Database password | local-only value | Managed DB password |
+| `DB_URL` | TiDB/MySQL JDBC URL | `jdbc:mysql://localhost:3306/Contify` | TiDB connection URL |
+| `DB_USERNAME` | Database user | `root` | TiDB user |
+| `DB_PASSWORD` | Database password | local-only value | TiDB password |
 | `JWT_SECRET` | JWT signing key | local random value | Long random secret, 32+ characters |
-| `FRONTEND_URL` | Allowed browser origin | `http://localhost:5173` | Exact Vercel HTTPS URL |
+| `FRONTEND_URL` | Comma-separated allowed browser origins | `http://localhost:5173` | Exact Vercel HTTPS origin(s) |
+| `FRONTEND_BASE_URL` | Single origin used in password reset links | `http://localhost:5173` | Primary Vercel HTTPS origin |
+| `SPRING_PROFILES_ACTIVE` | Runtime configuration profile | `dev` | `prod` |
 | `PORT` | HTTP port | `9090` | Platform-provided value |
 | `MAIL_ENABLED` | Enable verification/reset email delivery | `false` | `true` |
 | `MAIL_HOST` / `MAIL_PORT` | SMTP server | local SMTP settings | Provider SMTP settings |
@@ -82,14 +86,16 @@ Deploy `server/` to Railway. In Railway, open the Spring service, select **Varia
 | `MAIL_FROM` | Sender address | `no-reply@example.com` | Verified sender |
 | `GOOGLE_CLIENT_ID` | Server-side Google token audience | blank until configured | Google Web client ID |
 
-Spring Boot uses `server.port=${PORT:9090}`. Hibernate currently preserves the existing `ddl-auto=update` behavior; use a controlled database migration process before changing that policy for a larger production rollout.
+Render provides `PORT` automatically. Free Render services may sleep after inactivity; the first request can be slow.
+
+Spring Boot defaults to the `prod` profile, which requires the database and JWT settings, enforces verified TLS, and uses `ddl-auto=validate`. Set Render `SPRING_PROFILES_ACTIVE=prod`. Back up and import the complete database, then apply `server/migrations/001_add_email_verification.sql` before the first production start. Local development uses the explicit `dev` profile and Hibernate `ddl-auto=update`.
 
 ### 3. Deploy React
 
 Deploy `client/` to Vercel. Open **Project Settings → Environment Variables** and add these public build variables:
 
 ```env
-VITE_API_URL=https://your-spring-backend-domain/api
+VITE_API_URL=https://your-render-backend.onrender.com/api
 VITE_GOOGLE_CLIENT_ID=your-google-web-client-id
 ```
 
@@ -117,11 +123,11 @@ Write actions display a disabled-action dialog with Sign Up and Log In links. No
 
 ## Existing Data Migration
 
-Do not create a fresh database and recreate users. Back up the complete local `Contify` database first, import that backup into the intended Railway MySQL database, verify counts and stable user IDs, and only then apply the additive email-verification migration. See [the full Railway and migration runbook](docs/DATA_MIGRATION_AND_RAILWAY.md).
+Do not create a fresh database and recreate users. Back up the complete local `Contify` database first, import that backup into TiDB Cloud, verify counts and stable user IDs, and only then apply the additive email-verification migration. See [the free deployment and migration runbook](docs/FREE_DEPLOYMENT.md).
 
 ## CI
 
-The GitHub Actions workflow in `.github/workflows/ci.yml` runs the React build and the Spring Boot test/package checks on pushes and pull requests. It does not deploy automatically.
+The GitHub Actions workflow in `.github/workflows/ci.yml` runs frontend lint/build and `./mvnw -B clean verify` on pushes and pull requests. It does not deploy automatically.
 
 ## Repository Hygiene
 
@@ -132,6 +138,8 @@ The GitHub Actions workflow in `.github/workflows/ci.yml` runs the React build a
 
 ## Module Documentation
 
+- [Environment and deployment keys](docs/ENVIRONMENT_SETUP.md)
+- [Free deployment runbook](docs/FREE_DEPLOYMENT.md)
 - [Frontend guide](client/README.md)
 - [Backend guide](server/README.md)
 - [REST API reference](server/API_DOCUMENTATION.md)

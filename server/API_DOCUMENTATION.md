@@ -10,20 +10,22 @@ This is the Spring Boot backend for Contify, a full-stack Content Management Sys
 CREATE DATABASE Contify;
 ```
 
-### 2. Update MySQL Credentials
-In `application.properties`, update:
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/Contify?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-spring.datasource.username=root
-spring.datasource.password=
-```
+### 2. Configure Local Environment
+Copy `server/.env.example` to `server/.env`, set the local MySQL credentials, and generate a random `JWT_SECRET` of at least 32 bytes. Do not put secrets in `application.properties`.
 
 ### 3. Start the Server
+
 ```bash
-mvn spring-boot:run
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
 
-Tables will be created automatically via Hibernate (ddl-auto=update).
+In PowerShell:
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE="dev"; .\mvnw.cmd spring-boot:run
+```
+
+The `dev` profile permits Hibernate schema updates for local development. Production uses the default `prod` profile, requires explicit credentials, verifies database TLS, and validates the schema without changing it. Apply `server/migrations/001_add_email_verification.sql` to the production database before starting the service.
 
 ### 4. Test Data
 On first run, 3 test users are created:

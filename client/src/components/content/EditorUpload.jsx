@@ -1,6 +1,7 @@
 import React from "react";
 import projectService from "../../services/projectService";
 import { useAuth } from "../../context/AuthContext";
+import { isDemoMode } from "../../services/demoService";
 
 function detectFileType(file) {
   if (!file) {
@@ -32,6 +33,11 @@ export default function EditorUpload({ taskId, onSubmitted }) {
   const handleSubmit = async () => {
     setStatus("");
     setError("");
+
+    if (isDemoMode()) {
+      setError("Cloud uploads and task submissions are disabled in the read-only demo.");
+      return;
+    }
 
     if (!file) {
       setError("Choose a file first.");

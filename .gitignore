@@ -297,3 +297,7 @@ node_modules/.cache/
 **/tmp/
 test-results/
 playwright-report/
+
+contify-backup.sql
+
+docs/**

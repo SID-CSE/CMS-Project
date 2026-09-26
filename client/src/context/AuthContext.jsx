@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
+import { isDemoMode } from '../services/demoService';
 
 const AuthContext = createContext();
 
@@ -82,6 +83,7 @@ export const AuthProvider = ({ children }) => {
     isLoggedIn: !!user,
     userId: user?.id,
     userRole: user?.role,
+    isDemo: Boolean(user?.demo) || isDemoMode(),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
